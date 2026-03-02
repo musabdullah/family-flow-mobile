@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "459137016269",
+    "project_id": "familyflow-6b67c",
+    "storage_bucket": "familyflow-6b67c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:459137016269:android:844708879ec4de33f9e484",
+        "android_client_info": {
+          "package_name": "com.isim.familyflow"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "459137016269-hgof7md3tujm0m9lj8qe8idifnv6264e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.isim.familyflow",
+            "certificate_hash": "29896ac1f6a53962cf23a409158b1c19d9dbd242"
+          }
+        },
+        {
+          "client_id": "459137016269-smvk76jmv122ej3jh1hleuld9152vut1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.isim.familyflow",
+            "certificate_hash": "c9264e6b352b316c9ed8328491517ef682df81bd"
+          }
+        },
+        {
+          "client_id": "459137016269-2gnenn8bdsub2bhj3rec4g511ejlea51.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzV0akbeSNlYUqqZGXw0Z6ak6kLhZTa2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "459137016269-2gnenn8bdsub2bhj3rec4g511ejlea51.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "459137016269-q85ja534hmb4uib4v0dpr12cc19baqta.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.isim.familyflow"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
