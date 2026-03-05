@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../store/authStore';
+import { sendFamilyNotification } from '../lib/notifications';
 
 export interface Task {
     id: string;
@@ -24,7 +25,8 @@ export function useTasks(columnId?: string) {
     const [rawTasks, setRawTasks] = useState<Task[]>([]);
     const [tempTopIds, setTempTopIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
-    const familyId = useAuthStore(state => state.user?.familyId);
+    const user = useAuthStore(state => state.user);
+    const familyId = user?.familyId;
 
     useEffect(() => {
         if (!familyId) {
@@ -81,9 +83,18 @@ export function useTasks(columnId?: string) {
     }, [columnId, familyId]);
 
     const addTask = async (newTask: Omit<Task, 'id'>) => {
-        if (!familyId) return;
+        if (!familyId || !user) return;
         try {
             await addDoc(collection(db, 'families', familyId, 'tasks'), newTask);
+
+            // Dispatch notification
+            sendFamilyNotification({
+                familyId,
+                senderId: user.id,
+                title: 'Yeni Görev',
+                body: `${user.name}: "${newTask.title}" eklendi.`,
+                data: { route: 'pano', columnId: newTask.columnId }
+            });
         } catch (error) {
             console.error("Error adding task", error);
         }

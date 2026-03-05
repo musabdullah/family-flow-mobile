@@ -24,6 +24,7 @@ import { ActivityIndicator, Alert } from 'react-native';
 import { Task } from '../hooks/useTasks';
 import { useMessages } from '../hooks/useMessages';
 import { useInvites, PendingInvite } from '../hooks/useInvites';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -132,6 +133,9 @@ export default function FamilyFlowBoard() {
     const { tasks, loading, addTask, updateTask, deleteTask } = useTasks();
     const { invites } = useInvites();
     const insets = useSafeAreaInsets();
+
+    // Setup push notification listeners and register token
+    usePushNotifications();
 
     const acceptInvite = async (invite: PendingInvite) => {
         if (!user) return;

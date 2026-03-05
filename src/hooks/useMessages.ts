@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, addDoc, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../store/authStore';
+import { sendFamilyNotification } from '../lib/notifications';
 
 export interface ChatMessage {
     id: string;
@@ -15,7 +16,8 @@ export interface ChatMessage {
 export function useMessages() {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [loading, setLoading] = useState(true);
-    const familyId = useAuthStore(state => state.user?.familyId);
+    const user = useAuthStore(state => state.user);
+    const familyId = user?.familyId;
 
     useEffect(() => {
         if (!familyId) {
@@ -49,9 +51,20 @@ export function useMessages() {
     }, [familyId]);
 
     const sendMessage = async (newMsg: Omit<ChatMessage, 'id'>) => {
-        if (!familyId) return;
+        if (!familyId || !user) return;
         try {
             await addDoc(collection(db, 'families', familyId, 'messages'), newMsg);
+
+            // Only send push if it's a real user message, not a system-generated completion note
+            if (newMsg.author !== 'Sistem') {
+                sendFamilyNotification({
+                    familyId,
+                    senderId: user.id,
+                    title: 'Yeni Mesaj',
+                    body: `${user.name}: ${newMsg.text}`,
+                    data: { route: 'sohbet' }
+                });
+            }
         } catch (error) {
             console.error("Error adding message", error);
         }
