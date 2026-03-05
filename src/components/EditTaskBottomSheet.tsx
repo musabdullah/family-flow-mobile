@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     title: { color: '#e4e8f8', fontSize: 17, fontWeight: 'bold' },
     closeBtn: { width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' },
     divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.07)', marginHorizontal: 18, marginBottom: 18 },
-    body: { paddingHorizontal: 18, paddingBottom: 40 },
+    body: { paddingHorizontal: 18, paddingBottom: 90 },
     label: { color: '#47506f', fontSize: 11, fontWeight: 'bold', marginBottom: 8 },
     input: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 15, paddingHorizontal: 16, height: 50, color: '#e4e8f8', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.09)', marginBottom: 14 },
     urgentCard: { borderRadius: 16, borderWidth: 1.5, padding: 14, marginBottom: 20 },

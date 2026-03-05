@@ -7,6 +7,8 @@ import {
     PanResponder,
     Dimensions,
     BackHandler,
+    Keyboard,
+    Platform,
 } from 'react-native';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -30,6 +32,24 @@ export default function BottomSheetWrapper({
     const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [renderVisible, setRenderVisible] = useState(visible);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+    useEffect(() => {
+        const keyboardShowEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const keyboardHideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const showSub = Keyboard.addListener(keyboardShowEvent, (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+        });
+        const hideSub = Keyboard.addListener(keyboardHideEvent, () => {
+            setKeyboardHeight(0);
+        });
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     useEffect(() => {
         if (visible) {
@@ -78,12 +98,12 @@ export default function BottomSheetWrapper({
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => false,
-            onMoveShouldSetPanResponder: (_, gs) =>
+            onMoveShouldSetPanResponder: (e: any, gs: any) =>
                 gs.dy > 10 && Math.abs(gs.dx) < 25,
-            onPanResponderMove: (_, gs) => {
+            onPanResponderMove: (e: any, gs: any) => {
                 if (gs.dy > 0) slideAnim.setValue(gs.dy);
             },
-            onPanResponderRelease: (_, gs) => {
+            onPanResponderRelease: (e: any, gs: any) => {
                 if (gs.dy > DISMISS_THRESHOLD || gs.vy > 0.8) {
                     Animated.timing(slideAnim, {
                         toValue: SCREEN_HEIGHT,
@@ -105,7 +125,10 @@ export default function BottomSheetWrapper({
     if (!renderVisible) return null;
 
     return (
-        <View style={styles.fullscreen} pointerEvents="box-none">
+        <View
+            style={styles.fullscreen}
+            pointerEvents="box-none"
+        >
             {/* Backdrop */}
             <TouchableWithoutFeedback onPress={onClose}>
                 <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]} />
@@ -115,7 +138,12 @@ export default function BottomSheetWrapper({
             <Animated.View
                 style={[
                     styles.sheetContainer,
-                    { minHeight, transform: [{ translateY: slideAnim }] },
+                    {
+                        minHeight,
+                        maxHeight: SCREEN_HEIGHT * 0.85,
+                        transform: [{ translateY: slideAnim }],
+                        paddingBottom: keyboardHeight,
+                    },
                 ]}
             >
                 {/* Drag handle */}
@@ -124,7 +152,6 @@ export default function BottomSheetWrapper({
                     <View style={styles.handleBar} />
                 </View>
 
-                {/* Content — completely free from gesture */}
                 {children}
             </Animated.View>
         </View>

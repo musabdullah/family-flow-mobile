@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Image } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Image, BackHandler } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 import { useTasks } from '../hooks/useTasks';
 import { Bell, ShoppingCart, Zap, Calendar, Star, Sun, Sparkles } from 'lucide-react-native';
@@ -171,6 +171,28 @@ export default function FamilyFlowBoard() {
 
     const [activeTab, setActiveTab] = useState<'pano' | 'sohbet' | 'arsiv'>('pano');
     const [activeCol, setActiveCol] = useState(0);
+    const flatListRef = useRef<FlatList>(null);
+
+    const handleTabChange = (tab: 'pano' | 'sohbet' | 'arsiv') => {
+        setActiveTab(tab);
+        if (tab === 'pano') {
+            setActiveCol(0);
+            setTimeout(() => {
+                flatListRef.current?.scrollToIndex({ index: 0, animated: true });
+            }, 50);
+        }
+    };
+
+    useEffect(() => {
+        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+            if (activeTab !== 'pano') {
+                handleTabChange('pano');
+                return true;
+            }
+            return false;
+        });
+        return () => sub.remove();
+    }, [activeTab]);
 
     const [showBillsSheet, setShowBillsSheet] = useState(false);
     const [showShoppingSheet, setShowShoppingSheet] = useState(false);
@@ -391,9 +413,12 @@ export default function FamilyFlowBoard() {
                     </View>
                 ) : (
                     <FlatList
+                        ref={flatListRef}
                         data={COLUMNS}
                         horizontal
                         pagingEnabled
+                        initialScrollIndex={activeCol}
+                        getItemLayout={(data, index) => ({ length: width, offset: width * index, index })}
                         showsHorizontalScrollIndicator={false}
                         onMomentumScrollEnd={(e) => {
                             const contentOffsetX = e.nativeEvent.contentOffset.x;
@@ -414,7 +439,7 @@ export default function FamilyFlowBoard() {
             )}
 
             {/* Nav */}
-            <BottomNavBar activeTab={activeTab} onChangeTab={setActiveTab} completedCount={completedCount} />
+            <BottomNavBar activeTab={activeTab} onChangeTab={handleTabChange} completedCount={completedCount} />
 
             {/* Bottom Sheets */}
             <ShoppingBottomSheet

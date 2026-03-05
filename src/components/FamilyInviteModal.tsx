@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert, BackHandler } from 'react-native';
 import { ChevronLeft, Users, Send, Check, Trash2, Hourglass } from 'lucide-react-native';
 import Animated, { SlideInRight, SlideOutRight } from 'react-native-reanimated';
 import { collection, query, where, onSnapshot, setDoc, doc, deleteDoc } from 'firebase/firestore';
@@ -56,6 +56,15 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
 
         return () => unsubscribe();
     }, [visible, user?.familyId]);
+
+    useEffect(() => {
+        if (!visible) return;
+        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+            onClose();
+            return true;
+        });
+        return () => sub.remove();
+    }, [visible, onClose]);
 
     if (!visible) return null;
 

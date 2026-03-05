@@ -92,7 +92,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     });
                 } catch (error) {
                     console.error("Error fetching user data:", error);
-                    set({ isAuthReady: true }); // Prevent app from hanging if DB fails
+                    // Fallback for offline mode so we don't kick user to login screen
+                    set({
+                        user: {
+                            id: firebaseUser.uid,
+                            name: firebaseUser.displayName || 'İsimsiz Üye',
+                            email: firebaseUser.email || '',
+                            avatar: firebaseUser.photoURL || '',
+                            role: 'member',
+                            familyId: firebaseUser.uid,
+                        },
+                        isAuthReady: true
+                    });
                 }
             } else {
                 set({ user: null, isAuthReady: true });

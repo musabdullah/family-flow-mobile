@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, KeyboardAvoidingView, Platform, ScrollView, BackHandler } from 'react-native';
 import { ChevronLeft, Edit2, Upload, Camera } from 'lucide-react-native';
 import { UserProfile } from '../store/authStore';
 import * as ImagePicker from 'expo-image-picker';
@@ -28,6 +28,22 @@ interface ProfileEditModalProps {
 export default function ProfileEditModal({ visible, user, onClose, onSavePhoto, onSaveName }: ProfileEditModalProps) {
     const [name, setName] = useState(user?.name || '');
 
+    const handleBack = () => {
+        if (name.trim() !== '' && name.trim() !== user?.name && onSaveName) {
+            onSaveName(name.trim());
+        }
+        onClose();
+    };
+
+    React.useEffect(() => {
+        if (!visible) return;
+        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+            handleBack();
+            return true;
+        });
+        return () => sub.remove();
+    }, [visible, name, user?.name, onSaveName, onClose]);
+
     if (!visible) return null;
 
     const initials = (name || user?.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
@@ -38,23 +54,18 @@ export default function ProfileEditModal({ visible, user, onClose, onSavePhoto, 
             mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 0.8,
+            quality: 0.2,
+            base64: true,
         });
 
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            onSavePhoto(result.assets[0].uri);
+        if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0].base64) {
+            const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
+            onSavePhoto(base64Img);
         }
     };
 
     const handleRemovePhoto = () => {
         onSavePhoto(undefined);
-    };
-
-    const handleBack = () => {
-        if (name.trim() !== '' && name.trim() !== user?.name && onSaveName) {
-            onSaveName(name.trim());
-        }
-        onClose();
     };
 
     return (
