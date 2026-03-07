@@ -14,11 +14,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "459137016269-7qvnn8rljjvmdgv06t4uhk6ppc8hh88q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.isim.familyflow",
+            "certificate_hash": "14015c7cb885509251c8b339b9aafcb6a62ddc1b"
+          }
+        },
+        {
           "client_id": "459137016269-hgof7md3tujm0m9lj8qe8idifnv6264e.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.isim.familyflow",
             "certificate_hash": "29896ac1f6a53962cf23a409158b1c19d9dbd242"
+          }
+        },
+        {
+          "client_id": "459137016269-p3os28to1mpddfb4bpstpuspf246j320.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.isim.familyflow",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {

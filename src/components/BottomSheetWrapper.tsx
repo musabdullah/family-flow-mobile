@@ -10,6 +10,8 @@ import {
     Keyboard,
     Platform,
 } from 'react-native';
+import { useThemeStore } from '../store/themeStore';
+import { getColors } from '../theme/colors';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const DISMISS_THRESHOLD = 120;
@@ -29,6 +31,10 @@ export default function BottomSheetWrapper({
     accentColor = '#a78bfa',
     minHeight = 400,
 }: BottomSheetWrapperProps) {
+    const { isDarkMode } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
+
     const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [renderVisible, setRenderVisible] = useState(visible);
@@ -158,45 +164,47 @@ export default function BottomSheetWrapper({
     );
 }
 
-const styles = StyleSheet.create({
-    fullscreen: {
-        ...StyleSheet.absoluteFillObject,
-        zIndex: 1000,
-        elevation: 1000,
-        justifyContent: 'flex-end',
-    },
-    backdrop: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-    },
-    sheetContainer: {
-        backgroundColor: '#1c1f31',
-        borderTopLeftRadius: 28,
-        borderTopRightRadius: 28,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -6 },
-        shadowOpacity: 0.5,
-        shadowRadius: 30,
-        elevation: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.06)',
-        overflow: 'hidden',
-    },
-    shimmer: {
-        height: 3,
-        width: '100%',
-        opacity: 0.6,
-    },
-    dragHandle: {
-        width: '100%',
-        paddingBottom: 8,
-        alignItems: 'center',
-    },
-    handleBar: {
-        marginTop: 12,
-        width: 38,
-        height: 4,
-        borderRadius: 3,
-        backgroundColor: 'rgba(255,255,255,0.22)',
-    },
-});
+function createStyles(colors: any) {
+    return StyleSheet.create({
+        fullscreen: {
+            ...StyleSheet.absoluteFillObject,
+            zIndex: 1000,
+            elevation: 1000,
+            justifyContent: 'flex-end',
+        },
+        backdrop: {
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: colors.modalOverlay,
+        },
+        sheetContainer: {
+            backgroundColor: colors.card,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -6 },
+            shadowOpacity: 0.5,
+            shadowRadius: 30,
+            elevation: 20,
+            borderWidth: 1,
+            borderColor: colors.border,
+            overflow: 'hidden',
+        },
+        shimmer: {
+            height: 3,
+            width: '100%',
+            opacity: 0.6,
+        },
+        dragHandle: {
+            width: '100%',
+            paddingBottom: 8,
+            alignItems: 'center',
+        },
+        handleBar: {
+            marginTop: 12,
+            width: 38,
+            height: 4,
+            borderRadius: 3,
+            backgroundColor: colors.border,
+        },
+    });
+}

@@ -4,18 +4,9 @@ import { User, UserPlus, LogOut, ChevronRight } from 'lucide-react-native';
 import { UserProfile } from '../store/authStore';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutRight } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeStore } from '../store/themeStore';
+import { getColors } from '../theme/colors';
 
-const THEME = {
-    bg: '#1c1f31',
-    surface: '#21243a',
-    surfaceHover: '#272b44',
-    text: '#e4e8f8',
-    textMuted: '#8a93b5',
-    textDim: '#47506f',
-    primary: '#a78bfa',
-    danger: '#ef4444',
-    borderStrong: 'rgba(255,255,255,0.14)',
-};
 
 interface ProfileDropdownMenuProps {
     visible: boolean;
@@ -23,10 +14,15 @@ interface ProfileDropdownMenuProps {
     onClose: () => void;
     onEditProfile: () => void;
     onInvite: () => void;
+    onLeaveFamily: () => void;
     onSignOut: () => void;
 }
 
-export default function ProfileDropdownMenu({ visible, user, onClose, onEditProfile, onInvite, onSignOut }: ProfileDropdownMenuProps) {
+export default function ProfileDropdownMenu({ visible, user, onClose, onEditProfile, onInvite, onLeaveFamily, onSignOut }: ProfileDropdownMenuProps) {
+    const { isDarkMode } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
+
     if (!visible) return null;
 
     const initials = (user?.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
@@ -74,13 +70,13 @@ export default function ProfileDropdownMenu({ visible, user, onClose, onEditProf
                                 onPress={() => { onClose(); onEditProfile(); }}
                             >
                                 <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(167,139,250,0.1)' }]}>
-                                    <User size={20} color={THEME.primary} />
+                                    <User size={20} color={colors.accent} />
                                 </View>
                                 <View style={styles.menuTextWrap}>
                                     <Text style={styles.menuTitle}>Profili Düzenle</Text>
                                     <Text style={styles.menuSub}>İsim ve fotoğraf</Text>
                                 </View>
-                                <ChevronRight size={16} color={THEME.textDim} />
+                                <ChevronRight size={16} color={colors.textSecondary} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -95,7 +91,23 @@ export default function ProfileDropdownMenu({ visible, user, onClose, onEditProf
                                     <Text style={styles.menuTitle}>Davet Gönder</Text>
                                     <Text style={styles.menuSub}>Aile üyesi ekle</Text>
                                 </View>
-                                <ChevronRight size={16} color={THEME.textDim} />
+                                <ChevronRight size={16} color={colors.textSecondary} />
+                            </TouchableOpacity>
+
+                            <View style={styles.divider} />
+
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                activeOpacity={0.7}
+                                onPress={() => { onClose(); onLeaveFamily(); }}
+                            >
+                                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+                                    <LogOut size={20} color="#f59e0b" />
+                                </View>
+                                <View style={styles.menuTextWrap}>
+                                    <Text style={[styles.menuTitle, { color: '#f59e0b' }]}>Aileden Ayrıl</Text>
+                                    <Text style={styles.menuSub}>Kendi grubuna dön</Text>
+                                </View>
                             </TouchableOpacity>
 
                             <View style={styles.divider} />
@@ -106,10 +118,10 @@ export default function ProfileDropdownMenu({ visible, user, onClose, onEditProf
                                 onPress={() => { onClose(); onSignOut(); }}
                             >
                                 <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-                                    <LogOut size={20} color={THEME.danger} />
+                                    <LogOut size={20} color={colors.warning} />
                                 </View>
                                 <View style={styles.menuTextWrap}>
-                                    <Text style={[styles.menuTitle, { color: THEME.danger }]}>Çıkış Yap</Text>
+                                    <Text style={[styles.menuTitle, { color: colors.warning }]}>Çıkış Yap</Text>
                                     <Text style={[styles.menuSub, { color: 'rgba(239, 68, 68, 0.7)' }]}>Google hesabından çık</Text>
                                 </View>
                             </TouchableOpacity>
@@ -122,98 +134,100 @@ export default function ProfileDropdownMenu({ visible, user, onClose, onEditProf
     );
 }
 
-const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        justifyContent: 'flex-start',
-        alignItems: 'flex-end',
-    },
-    dropdown: {
-        width: 300,
-        backgroundColor: THEME.bg,
-        borderRadius: 24,
-        marginTop: 60,
-        marginRight: 20,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.5,
-        shadowRadius: 20,
-        elevation: 10,
-        borderWidth: 1,
-        borderColor: THEME.borderStrong,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-        paddingHorizontal: 8,
-        paddingTop: 8,
-    },
-    avatarGradient: {
-        width: 44,
-        height: 44,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        overflow: 'hidden',
-    },
-    avatarImage: {
-        width: '100%',
-        height: '100%',
-    },
-    avatarInitials: {
-        color: THEME.text,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    headerTextWrap: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    userName: {
-        color: THEME.text,
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 2,
-    },
-    userEmail: {
-        color: THEME.textDim,
-        fontSize: 12,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        marginVertical: 12,
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 8,
-    },
-    menuIconWrap: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    menuTextWrap: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    menuTitle: {
-        color: THEME.text,
-        fontSize: 15,
-        fontWeight: 'bold',
-        marginBottom: 2,
-    },
-    menuSub: {
-        color: THEME.textDim,
-        fontSize: 12,
-    }
-});
+function createStyles(colors: any) {
+    return StyleSheet.create({
+        overlay: {
+            flex: 1,
+            backgroundColor: colors.modalOverlay,
+            justifyContent: 'flex-start',
+            alignItems: 'flex-end',
+        },
+        dropdown: {
+            width: 300,
+            backgroundColor: colors.card,
+            borderRadius: 24,
+            marginTop: 60,
+            marginRight: 20,
+            padding: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.5,
+            shadowRadius: 20,
+            elevation: 10,
+            borderWidth: 1,
+            borderColor: colors.border,
+        },
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 8,
+            paddingHorizontal: 8,
+            paddingTop: 8,
+        },
+        avatarGradient: {
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 12,
+            overflow: 'hidden',
+        },
+        avatarImage: {
+            width: '100%',
+            height: '100%',
+        },
+        avatarInitials: {
+            color: colors.textPrimary,
+            fontSize: 16,
+            fontWeight: 'bold',
+        },
+        headerTextWrap: {
+            flex: 1,
+            justifyContent: 'center',
+        },
+        userName: {
+            color: colors.textPrimary,
+            fontSize: 16,
+            fontWeight: 'bold',
+            marginBottom: 2,
+        },
+        userEmail: {
+            color: colors.textSecondary,
+            fontSize: 12,
+        },
+        divider: {
+            height: 1,
+            backgroundColor: colors.border,
+            marginVertical: 12,
+        },
+        menuItem: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 8,
+            paddingHorizontal: 8,
+        },
+        menuIconWrap: {
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 12,
+        },
+        menuTextWrap: {
+            flex: 1,
+            justifyContent: 'center',
+        },
+        menuTitle: {
+            color: colors.textPrimary,
+            fontSize: 15,
+            fontWeight: 'bold',
+            marginBottom: 2,
+        },
+        menuSub: {
+            color: colors.textSecondary,
+            fontSize: 12,
+        }
+    });
+}

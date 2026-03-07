@@ -101,9 +101,28 @@ export function useTasks(columnId?: string) {
     };
 
     const updateTask = async (id: string, updates: Partial<Task>) => {
-        if (!familyId) return;
+        if (!familyId || !user) return;
         try {
             await updateDoc(doc(db, 'families', familyId, 'tasks', id), updates);
+
+            // Dispatch specific notification for task completion
+            if (updates.tag === 'Tamamlandı') {
+                const existingTask = rawTasks.find(t => t.id === id);
+                if (existingTask && existingTask.tag !== 'Tamamlandı') {
+                    let verb = 'tamamladı';
+                    if (existingTask.columnId === 'alisveris') verb = 'aldı 🛒';
+                    else if (existingTask.columnId === 'faturalar') verb = 'ödedi 💸';
+                    else if (existingTask.columnId === 'planlar') verb = 'gerçekleştirdi 📅';
+
+                    sendFamilyNotification({
+                        familyId,
+                        senderId: user.id,
+                        title: 'Görev Tamamlandı ✅',
+                        body: `${user.name}, "${existingTask.title}" ${verb}`,
+                        data: { route: 'arsiv' }
+                    });
+                }
+            }
         } catch (error) {
             console.error("Error updating task", error);
         }

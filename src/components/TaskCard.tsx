@@ -8,6 +8,8 @@ import Animated, {
     LinearTransition
 } from 'react-native-reanimated';
 import { Check } from 'lucide-react-native';
+import { useThemeStore } from '../store/themeStore';
+import { getColors } from '../theme/colors';
 
 interface Task {
     id: string;
@@ -30,6 +32,9 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onComplete, onLongPress, accentColor }: TaskCardProps) {
+    const { isDarkMode } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
 
     const scale = useSharedValue(1);
     const checkScale = useSharedValue(1);
@@ -147,7 +152,7 @@ export default function TaskCard({ task, onComplete, onLongPress, accentColor }:
                         ) : task.avatar && task.avatar.length > 2 ? (
                             <Image source={{ uri: task.avatar }} style={{ width: '100%', height: '100%', borderRadius: isShopping ? 14 : 16 }} />
                         ) : (
-                            <Text style={{ fontSize: isShopping ? 16 : 20, color: '#fff', fontWeight: 'bold' }}>
+                            <Text style={{ fontSize: isShopping ? 16 : 20, color: colors.switchThumb, fontWeight: 'bold' }}>
                                 {task.addedBy ? task.addedBy.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() : '👤'}
                             </Text>
                         )}
@@ -207,161 +212,163 @@ export default function TaskCard({ task, onComplete, onLongPress, accentColor }:
     );
 }
 
-const styles = StyleSheet.create({
-    card: {
-        backgroundColor: '#262a3f',
-        borderRadius: 18,
-        borderWidth: 1.5,
-        borderColor: 'rgba(255,255,255,0.06)',
-        marginBottom: 10,
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    shoppingCard: {
-        marginBottom: 8,
-        borderRadius: 14,
-    },
-    urgentCard: {
-        borderColor: 'rgba(248,113,113,0.8)', // distinct red/orange border
-        backgroundColor: '#2a222f',
-    },
-    urgentGlow: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(251,146,60,0.05)',
-    },
-    cardContent: {
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-    },
-    shoppingCardContent: {
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-    },
-    row: {
-        flexDirection: 'row',
-    },
-    midCol: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    rightCol: {
-        justifyContent: 'center',
-        alignItems: 'flex-end',
-        paddingLeft: 8,
-    },
-    checkHitbox: {
-        padding: 4, // easier to tap
-    },
-    topMeta: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 6,
-        gap: 6,
-        flexWrap: 'wrap',
-    },
-    userName: {
-        color: '#8a93b5',
-        fontSize: 11,
-        fontWeight: 'bold',
-    },
-    tag: {
-        backgroundColor: 'rgba(255,255,255,0.06)',
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    urgentTag: {
-        backgroundColor: 'rgba(248,113,113,0.15)',
-    },
-    tagText: {
-        fontSize: 10,
-        fontWeight: 'bold',
-    },
-    urgentTagText: {
-        color: '#f87171',
-    },
-    title: {
-        color: '#e4e8f8',
-        fontSize: 15,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    shoppingTitle: {
-        fontSize: 14,
-        marginBottom: 2,
-    },
-    timestamp: {
-        color: '#47506f',
-        fontSize: 10,
-        fontWeight: '600',
-    },
-    timeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginTop: 2,
-    },
-    noteIndicator: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.04)',
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
-        gap: 2,
-    },
-    noteIndicatorText: {
-        color: '#8a93b5',
-        fontSize: 9,
-        fontWeight: 'bold',
-    },
-    note: {
-        color: '#8a93b5',
-        fontSize: 12,
-        lineHeight: 16,
-        marginTop: 8,
-        paddingTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.04)',
-    },
-    dateBadge: {
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    dateBadgeText: {
-        fontSize: 10,
-        fontWeight: 'bold',
-    },
-    avatarWrap: {
-        width: 48,
-        height: 48,
-        borderRadius: 16,
-        backgroundColor: 'rgba(255,255,255,0.06)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 10,
-        alignSelf: 'flex-start',
-    },
-    shoppingAvatarWrap: {
-        width: 38,
-        height: 38,
-        borderRadius: 14,
-        marginRight: 10,
-        alignSelf: 'center',
-    },
-    checkBtn: {
-        width: 32,
-        height: 32,
-        borderRadius: 10,
-        borderWidth: 2,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-    },
-    shoppingCheckBtn: {
-        width: 26,
-        height: 26,
-        borderRadius: 8,
-    },
-});
+function createStyles(colors: any) {
+    return StyleSheet.create({
+        card: {
+            backgroundColor: colors.card,
+            borderRadius: 18,
+            borderWidth: 1.5,
+            borderColor: colors.border,
+            marginBottom: 10,
+            position: 'relative',
+            overflow: 'hidden',
+        },
+        shoppingCard: {
+            marginBottom: 8,
+            borderRadius: 14,
+        },
+        urgentCard: {
+            borderColor: 'rgba(248,113,113,0.8)', // distinct red/orange border
+            backgroundColor: colors.card,
+        },
+        urgentGlow: {
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: 'rgba(251,146,60,0.05)',
+        },
+        cardContent: {
+            paddingVertical: 8,
+            paddingHorizontal: 14,
+        },
+        shoppingCardContent: {
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+        },
+        row: {
+            flexDirection: 'row',
+        },
+        midCol: {
+            flex: 1,
+            justifyContent: 'center',
+        },
+        rightCol: {
+            justifyContent: 'center',
+            alignItems: 'flex-end',
+            paddingLeft: 8,
+        },
+        checkHitbox: {
+            padding: 4, // easier to tap
+        },
+        topMeta: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 6,
+            gap: 6,
+            flexWrap: 'wrap',
+        },
+        userName: {
+            color: colors.textSecondary,
+            fontSize: 11,
+            fontWeight: 'bold',
+        },
+        tag: {
+            backgroundColor: colors.border,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 4,
+        },
+        urgentTag: {
+            backgroundColor: 'rgba(248,113,113,0.15)',
+        },
+        tagText: {
+            fontSize: 10,
+            fontWeight: 'bold',
+        },
+        urgentTagText: {
+            color: '#f87171',
+        },
+        title: {
+            color: colors.textPrimary,
+            fontSize: 15,
+            fontWeight: 'bold',
+            marginBottom: 4,
+        },
+        shoppingTitle: {
+            fontSize: 14,
+            marginBottom: 2,
+        },
+        timestamp: {
+            color: colors.textSecondary,
+            fontSize: 10,
+            fontWeight: '600',
+        },
+        timeRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 2,
+        },
+        noteIndicator: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: colors.border,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 4,
+            gap: 2,
+        },
+        noteIndicatorText: {
+            color: colors.textSecondary,
+            fontSize: 9,
+            fontWeight: 'bold',
+        },
+        note: {
+            color: colors.textSecondary,
+            fontSize: 12,
+            lineHeight: 16,
+            marginTop: 8,
+            paddingTop: 8,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+        },
+        dateBadge: {
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 4,
+        },
+        dateBadgeText: {
+            fontSize: 10,
+            fontWeight: 'bold',
+        },
+        avatarWrap: {
+            width: 48,
+            height: 48,
+            borderRadius: 16,
+            backgroundColor: colors.border,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 10,
+            alignSelf: 'flex-start',
+        },
+        shoppingAvatarWrap: {
+            width: 38,
+            height: 38,
+            borderRadius: 14,
+            marginRight: 10,
+            alignSelf: 'center',
+        },
+        checkBtn: {
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            borderWidth: 2,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.border,
+        },
+        shoppingCheckBtn: {
+            width: 26,
+            height: 26,
+            borderRadius: 8,
+        },
+    });
+}

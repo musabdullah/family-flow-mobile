@@ -17,6 +17,8 @@ import Svg, { Path } from 'react-native-svg';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
+import { getColors } from '../theme/colors';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({
@@ -97,6 +99,9 @@ const FloatingParticle = ({ particle }: { particle: typeof PARTICLES[0] }) => {
 export function ProfileSelection() {
     const login = useAuthStore(state => state.login);
     const [loading, setLoading] = React.useState(false);
+    const { isDarkMode } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
 
     const handleGoogleLogin = async () => {
         setLoading(true);
@@ -121,7 +126,7 @@ export function ProfileSelection() {
     return (
         <View style={styles.container}>
             <LinearGradient
-                colors={['#0d0f18', '#12141c', '#181b27']}
+                colors={isDarkMode ? ['#0d0f18', '#12141c', '#181b27'] : [colors.background, colors.background, colors.background]}
                 style={StyleSheet.absoluteFillObject}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -181,7 +186,7 @@ export function ProfileSelection() {
                         disabled={loading}
                     >
                         {loading ? (
-                            <Text style={[styles.loginBtnText, { color: '#8a93b5' }]}>Giriş yapılıyor...</Text>
+                            <Text style={[styles.loginBtnText, { color: colors.textSecondary }]}>Giriş yapılıyor...</Text>
                         ) : (
                             <>
                                 <GoogleLogo size={20} />
@@ -211,19 +216,24 @@ export function ProfileSelection() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#12141c' },
+const createStyles = (colors: any) => StyleSheet.create({
+    container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
     glow: { position: 'absolute', width: 340, height: 340, borderRadius: 170 },
     card: {
         width: '90%',
         maxWidth: 360,
-        backgroundColor: 'rgba(24,27,39,0.85)',
-        borderColor: 'rgba(255,255,255,0.08)',
+        backgroundColor: colors.card,
+        borderColor: colors.border,
         borderWidth: 1,
         borderRadius: 28,
         padding: 32,
         alignItems: 'center',
         zIndex: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: colors.background === '#f8fafc' ? 0.05 : 0.3,
+        shadowRadius: 20,
+        elevation: 10,
     },
     logoWrap: {
         width: 80,
@@ -238,35 +248,37 @@ const styles = StyleSheet.create({
     },
     logoText: { fontSize: 40 },
     titleWrap: { alignItems: 'center', marginBottom: 28 },
-    title: { color: '#eef0fb', fontSize: 26, fontWeight: 'bold', marginBottom: 6, letterSpacing: -0.5 },
-    subtitle: { color: 'rgba(180,186,220,0.7)', fontSize: 14 },
+    title: { color: colors.textPrimary, fontSize: 26, fontWeight: 'bold', marginBottom: 6, letterSpacing: -0.5 },
+    subtitle: { color: colors.textSecondary, fontSize: 14 },
     features: { width: '100%', gap: 10, marginBottom: 32 },
     featureRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-        backgroundColor: 'rgba(255,255,255,0.035)',
+        backgroundColor: colors.iconBoxBg,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.06)',
+        borderColor: colors.border,
         borderRadius: 12,
         paddingVertical: 10,
         paddingHorizontal: 14,
     },
     featureIcon: { fontSize: 18 },
-    featureText: { color: 'rgba(200,206,235,0.8)', fontSize: 13 },
+    featureText: { color: colors.textPrimary, fontSize: 13 },
     loginBtn: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.switchThumb,
         paddingVertical: 14,
         borderRadius: 14,
         gap: 12,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
-    loginBtnText: { color: '#1a1a2e', fontSize: 15, fontWeight: 'bold', letterSpacing: -0.1 },
+    loginBtnText: { color: colors.background === '#f8fafc' ? '#1a1a2e' : '#1a1a2e', fontSize: 15, fontWeight: 'bold', letterSpacing: -0.1 },
     dividerWrap: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 24, gap: 12 },
-    divider: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.07)' },
-    dividerText: { color: 'rgba(150,158,190,0.5)', fontSize: 11, fontWeight: 'bold' },
-    securityNote: { color: 'rgba(140,150,185,0.5)', fontSize: 11.5, textAlign: 'center', lineHeight: 18 },
-    versionNote: { color: 'rgba(120,128,160,0.4)', fontSize: 11, marginTop: 24, position: 'absolute', bottom: 40 },
+    divider: { flex: 1, height: 1, backgroundColor: colors.border },
+    dividerText: { color: colors.textSecondary, fontSize: 11, fontWeight: 'bold' },
+    securityNote: { color: colors.textSecondary, fontSize: 11.5, textAlign: 'center', lineHeight: 18, opacity: 0.8 },
+    versionNote: { color: colors.textSecondary, fontSize: 11, marginTop: 24, position: 'absolute', bottom: 40, opacity: 0.7 },
 });

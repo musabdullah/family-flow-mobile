@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from 
 import { CheckCircle, X, Check } from 'lucide-react-native';
 import BottomSheetWrapper from './BottomSheetWrapper';
 import { Task } from '../hooks/useTasks';
+import { useThemeStore } from '../store/themeStore';
+import { getColors } from '../theme/colors';
 
 interface CompleteBottomSheetProps {
     visible: boolean;
@@ -13,6 +15,10 @@ interface CompleteBottomSheetProps {
 }
 
 export default function CompleteTaskBottomSheet({ visible, onClose, onSave, task, accentColor }: CompleteBottomSheetProps) {
+    const { isDarkMode } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
+
     const [note, setNote] = useState('');
 
     const prevTask = useRef<Task | null>(null);
@@ -86,18 +92,18 @@ export default function CompleteTaskBottomSheet({ visible, onClose, onSave, task
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) { return StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', padding: 18, paddingTop: 6 },
     iconBox: { width: 44, height: 44, borderRadius: 15, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
     headerText: { flex: 1, marginLeft: 12 },
     subtitle: { color: '#4ade80', fontSize: 11, fontWeight: 'bold' },
-    title: { color: '#e4e8f8', fontSize: 17, fontWeight: 'bold' },
-    closeBtn: { width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' },
-    divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.07)', marginHorizontal: 18, marginBottom: 18 },
+    title: { color: colors.textPrimary, fontSize: 17, fontWeight: 'bold' },
+    closeBtn: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+    divider: { height: 1, backgroundColor: colors.border, marginHorizontal: 18, marginBottom: 18 },
     body: { paddingHorizontal: 18, paddingBottom: 90 },
-    promptText: { color: '#8a93b5', fontSize: 14, marginBottom: 20, lineHeight: 20 },
-    label: { color: '#47506f', fontSize: 11, fontWeight: 'bold', marginBottom: 8 },
-    input: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 15, paddingHorizontal: 16, height: 50, color: '#e4e8f8', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.09)', marginBottom: 24 },
+    promptText: { color: colors.textSecondary, fontSize: 14, marginBottom: 20, lineHeight: 20 },
+    label: { color: colors.textSecondary, fontSize: 11, fontWeight: 'bold', marginBottom: 8 },
+    input: { backgroundColor: colors.border, borderRadius: 15, paddingHorizontal: 16, height: 50, color: colors.textPrimary, borderWidth: 1.5, borderColor: colors.border, marginBottom: 24 },
     saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 17, borderRadius: 18, gap: 9 },
     saveText: { fontWeight: 'bold', fontSize: 16 },
-});
+}); }

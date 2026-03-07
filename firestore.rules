@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // A function to check if the user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // A function to check if the document's familyId matches the requester's uid
+    // The codebase sets user's initial familyId to their own uid
+    function BelongsToFamily(familyId) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId == familyId;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Anyone signed in can read (needed for things like verifying email on invite)
+      allow read: if isSignedIn();
+      // Only the user themselves can edit/write to their own profile
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Invites Collection
+    match /invites/{emailId} {
+      // Anyone signed in can create an invite or read invites
+      allow read, create: if isSignedIn();
+      // Allow modifying or deleting an invite if the user is the target, or they sent it
+      allow update, delete: if isSignedIn() && (
+        request.auth.token.email.lower() == emailId.lower() || 
+        resource.data.familyId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId
+      );
+    }
+
+    // Families Collection (Tasks, Messages, etc)
+    match /families/{familyId}/{document=**} {
+      // Allow read/write ONLY IF the user's current familyId matches the collection's familyId
+      allow read, write: if isSignedIn() && BelongsToFamily(familyId);
+    }
+    
+  }
+}

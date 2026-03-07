@@ -22,24 +22,24 @@ export async function sendFamilyNotification({ familyId, senderId, title, body, 
         const querySnapshot = await getDocs(q);
         const tokens: string[] = [];
 
-        querySnapshot.forEach((doc) => {
-            const userData = doc.data();
+        querySnapshot.forEach((docSnap) => {
+            const userData = docSnap.data();
             // Don't send notification to the person who triggered it
-            if (doc.id !== senderId && userData.pushToken) {
+            if (docSnap.id !== senderId && userData.pushToken) {
                 tokens.push(userData.pushToken);
             }
         });
 
-        if (tokens.length === 0) return; // No other devices to notify
+        if (tokens.length === 0) return;
 
         // Send notifications via Expo's Push API
-        const message = {
-            to: tokens,
-            sound: 'default',
+        const messages = tokens.map(token => ({
+            to: token,
+            sound: 'default' as const,
             title,
             body,
             data: data || {},
-        };
+        }));
 
         const response = await fetch('https://exp.host/--/api/v2/push/send', {
             method: 'POST',
@@ -48,7 +48,7 @@ export async function sendFamilyNotification({ familyId, senderId, title, body, 
                 'Accept-encoding': 'gzip, deflate',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(message),
+            body: JSON.stringify(messages),
         });
 
         if (!response.ok) {

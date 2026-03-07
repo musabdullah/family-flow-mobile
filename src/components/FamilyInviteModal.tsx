@@ -2,22 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert, BackHandler } from 'react-native';
 import { ChevronLeft, Users, Send, Check, Trash2, Hourglass } from 'lucide-react-native';
 import Animated, { SlideInRight, SlideOutRight } from 'react-native-reanimated';
-import { collection, query, where, onSnapshot, setDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, setDoc, doc, deleteDoc, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../store/authStore';
-
-const THEME = {
-    bg: '#1c1f31',
-    surface: '#21243a',
-    surfaceHover: '#272b44',
-    text: '#e4e8f8',
-    textMuted: '#8a93b5',
-    textDim: '#47506f',
-    primary: '#10b981', // green accent in invite screen
-    success: '#10b981',
-    danger: '#ef4444',
-    borderStrong: 'rgba(255,255,255,0.14)',
-};
+import { useThemeStore } from '../store/themeStore';
+import { getColors } from '../theme/colors';
 
 type InviteStatus = 'pending' | 'accepted';
 
@@ -38,6 +27,9 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
     const [emailInput, setEmailInput] = useState('');
     const [invites, setInvites] = useState<Invite[]>([]);
     const { user } = useAuthStore();
+    const { isDarkMode } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
 
     useEffect(() => {
         if (!visible || !user?.familyId) return;
@@ -78,6 +70,16 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
         }
 
         try {
+            // Validate if user exists
+            const usersRef = collection(db, 'users');
+            const userQuery = query(usersRef, where('email', '==', targetEmail));
+            const querySnapshot = await getDocs(userQuery);
+
+            if (querySnapshot.empty) {
+                Alert.alert('Hata', 'Bu e-posta adresine kayıtlı bir kullanıcı bulunamadı.');
+                return;
+            }
+
             await setDoc(doc(db, 'invites', targetEmail), {
                 email: targetEmail,
                 familyId: user.familyId,
@@ -110,7 +112,7 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={onClose} style={styles.backBtn} activeOpacity={0.7}>
-                        <ChevronLeft size={24} color={THEME.textMuted} />
+                        <ChevronLeft size={24} color={colors.textSecondary} />
                     </TouchableOpacity>
                     <View style={styles.headerTextWrap}>
                         <Text style={styles.headerTitle}>Aileye Davet Et</Text>
@@ -123,7 +125,7 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
                     {/* Info Card */}
                     <View style={styles.infoCard}>
                         <View style={styles.infoIconWrap}>
-                            <Users size={20} color={THEME.primary} />
+                            <Users size={20} color="#10b981" />
                         </View>
                         <View style={styles.infoTextWrap}>
                             <Text style={styles.infoTitle}>Aile Üyelerini Ekle</Text>
@@ -139,7 +141,7 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
                                 <TextInput
                                     style={styles.input}
                                     placeholder="ornek@gmail.com"
-                                    placeholderTextColor={THEME.textDim}
+                                    placeholderTextColor={colors.textSecondary}
                                     value={emailInput}
                                     onChangeText={setEmailInput}
                                     keyboardType="email-address"
@@ -152,7 +154,7 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
                                 disabled={!emailInput.trim()}
                                 activeOpacity={0.7}
                             >
-                                <Send size={20} color={emailInput.trim() ? THEME.primary : THEME.textDim} />
+                                <Send size={20} color={emailInput.trim() ? "#10b981" : colors.textSecondary} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -165,20 +167,20 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
                                 <View key={invite.id} style={[styles.listItem, index !== invites.length - 1 && styles.listBorder]}>
                                     <View style={[styles.statusIcon, invite.status === 'accepted' ? styles.statusIconAccepted : styles.statusIconPending]}>
                                         {invite.status === 'accepted' ? (
-                                            <Check size={16} color={THEME.success} />
+                                            <Check size={16} color="#10b981" />
                                         ) : (
                                             <Hourglass size={16} color="#fbbf24" />
                                         )}
                                     </View>
                                     <View style={styles.itemTextWrap}>
                                         <Text style={styles.itemEmail}>{invite.email}</Text>
-                                        <Text style={[styles.itemStatus, { color: invite.status === 'accepted' ? THEME.success : '#fbbf24' }]}>
+                                        <Text style={[styles.itemStatus, { color: invite.status === 'accepted' ? "#10b981" : '#fbbf24' }]}>
                                             {invite.status === 'accepted' ? 'Kabul etti · Aile üyesi' : 'Davet bekleniyor'}
                                         </Text>
                                     </View>
                                     {invite.status === 'pending' && (
                                         <TouchableOpacity style={styles.removeBtn} onPress={() => handleRemove(invite.id)}>
-                                            <Trash2 size={16} color={THEME.danger} />
+                                            <Trash2 size={16} color={colors.warning} />
                                         </TouchableOpacity>
                                     )}
                                 </View>
@@ -192,10 +194,10 @@ export default function FamilyInviteModal({ visible, onClose }: FamilyInviteModa
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: '#12141c',
+        backgroundColor: colors.background,
         zIndex: 100,
     },
     header: {
@@ -205,14 +207,16 @@ const styles = StyleSheet.create({
         paddingTop: Platform.OS === 'ios' ? 50 : 30,
         paddingBottom: 20,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
-        backgroundColor: THEME.bg,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.headerBg,
     },
     backBtn: {
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: THEME.surface,
+        backgroundColor: colors.card,
+        borderWidth: 1,
+        borderColor: colors.border,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 16,
@@ -221,13 +225,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerTitle: {
-        color: THEME.text,
+        color: colors.textPrimary,
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 2,
     },
     headerSub: {
-        color: THEME.textMuted,
+        color: colors.textSecondary,
         fontSize: 13,
     },
     content: {
@@ -254,18 +258,18 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     infoTitle: {
-        color: THEME.primary,
+        color: '#10b981',
         fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 6,
     },
     infoDesc: {
-        color: THEME.textMuted,
+        color: colors.textSecondary,
         fontSize: 13,
         lineHeight: 20,
     },
     sectionTitleLabel: {
-        color: THEME.textMuted,
+        color: colors.textSecondary,
         fontSize: 12,
         fontWeight: 'bold',
         letterSpacing: 1,
@@ -280,15 +284,15 @@ const styles = StyleSheet.create({
     },
     inputWrap: {
         flex: 1,
-        backgroundColor: 'rgba(255,255,255,0.03)',
+        backgroundColor: colors.inputBg,
         borderWidth: 1,
-        borderColor: THEME.borderStrong,
+        borderColor: colors.border,
         borderRadius: 16,
     },
     input: {
         paddingHorizontal: 20,
         paddingVertical: 16,
-        color: THEME.text,
+        color: colors.textPrimary,
         fontSize: 15,
     },
     sendBtn: {
@@ -302,18 +306,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     sendBtnDisabled: {
-        backgroundColor: THEME.surface,
-        borderColor: THEME.borderStrong,
+        backgroundColor: colors.card,
+        borderColor: colors.border,
     },
     listSection: {
         flex: 1,
     },
     listContainer: {
-        backgroundColor: THEME.surface,
+        backgroundColor: colors.card,
         borderRadius: 20,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: THEME.borderStrong,
+        borderColor: colors.border,
     },
     listItem: {
         flexDirection: 'row',
@@ -322,7 +326,7 @@ const styles = StyleSheet.create({
     },
     listBorder: {
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)',
+        borderBottomColor: colors.border,
     },
     statusIcon: {
         width: 36,
@@ -342,7 +346,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     itemEmail: {
-        color: THEME.text,
+        color: colors.textPrimary,
         fontSize: 15,
         fontWeight: 'bold',
         marginBottom: 4,

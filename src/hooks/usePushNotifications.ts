@@ -1,30 +1,42 @@
 import { useState, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuthStore } from '../store/authStore';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
-// Set notification handler to show notifications even when app is open
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-    }),
-});
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+let Device: any = null;
+let Notifications: any = null;
+
+if (!isExpoGo) {
+    try {
+        Device = require('expo-device');
+        Notifications = require('expo-notifications');
+
+        Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldShowAlert: true,
+                shouldPlaySound: true,
+                shouldSetBadge: true,
+                shouldShowBanner: true,
+                shouldShowList: true,
+            }),
+        });
+    } catch (e) {
+        console.warn("Native modules for push notifications are not available.");
+    }
+}
 
 export function usePushNotifications() {
     const { user } = useAuthStore();
     const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-    const notificationListener = useRef<Notifications.Subscription>();
-    const responseListener = useRef<Notifications.Subscription>();
+    const notificationListener = useRef<any>(null);
+    const responseListener = useRef<any>(null);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || isExpoGo || !Notifications) return;
 
         registerForPushNotificationsAsync().then(token => {
             if (token) {
@@ -36,14 +48,14 @@ export function usePushNotifications() {
         });
 
         // This listener is fired whenever a notification is received while the app is foregrounded
-        notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        notificationListener.current = Notifications.addNotificationReceivedListener((notification: any) => {
             // Optional: Handle foreground notification logic here if needed
             // console.log("Foreground notification received:", notification);
         });
 
         // This listener is fired whenever a user taps on or interacts with a notification 
         // (works when app is foregrounded, backgrounded, or killed)
-        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        responseListener.current = Notifications.addNotificationResponseReceivedListener((response: any) => {
             // Optional: Handle notification tap logic here (e.g. navigation)
             // console.log("Notification tapped:", response);
         });
@@ -59,6 +71,8 @@ export function usePushNotifications() {
 
 async function registerForPushNotificationsAsync() {
     let token;
+
+    if (!Device || !Notifications) return null;
 
     if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
@@ -84,7 +98,7 @@ async function registerForPushNotificationsAsync() {
         // Learn more about projectId: https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
         try {
             token = (await Notifications.getExpoPushTokenAsync({
-                projectId: '365eda57-e638-46b4-8db3-712076cec245' // From app.json
+                projectId: '365eda57-e638-46b4-8db3-712076cec245'
             })).data;
         } catch (e) {
             console.error("Error getting Expo Push Token:", e);

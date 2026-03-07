@@ -1,0 +1,27 @@
+﻿.\gradlew.bat : 
+At line:1 char:297
++ ... e\android'; .\gradlew.bat app:assembleDebug -x
+ lint -x test 2>&1 | Ou ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:Strin 
+   g) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+BUG! exception in phase 'semantic analysis' in sourc
+e unit '_BuildScript_' Unsupported class file major 
+version 69
+> Unsupported class file major version 69
+
+* Try:
+> Run with --stacktrace option to get the stack trac
+e.
+> Run with --info or --debug option to get more log 
+output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 810ms

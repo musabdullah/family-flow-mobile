@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Image, BackHandler } from 'react-native';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
+import { getColors } from '../theme/colors';
 import { useTasks } from '../hooks/useTasks';
-import { Bell, ShoppingCart, Zap, Calendar, Star, Sun, Sparkles } from 'lucide-react-native';
+import { ShoppingCart, Zap, Calendar, Star, Sun, Moon, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, withTiming, withSpring, useSharedValue, withRepeat, withSequence, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +20,8 @@ import CompleteTaskBottomSheet from './CompleteTaskBottomSheet';
 import ProfileDropdownMenu from './ProfileDropdownMenu';
 import ProfileEditModal from './ProfileEditModal';
 import FamilyInviteModal from './FamilyInviteModal';
+import LeaveFamilyModal from './LeaveFamilyModal';
+import ThemePreviewModal from './ThemePreviewModal';
 import ChatScreen from './ChatScreen';
 import ArchiveScreen from './ArchiveScreen';
 import { ActivityIndicator, Alert } from 'react-native';
@@ -38,6 +42,9 @@ const COLUMNS = [
 ];
 
 const PaginationDot = ({ isActive, color, count = 0 }: { isActive: boolean; color: string; count?: number }) => {
+    const { isDarkMode } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
     const pulse = useSharedValue(0.2);
 
     useEffect(() => {
@@ -129,6 +136,10 @@ const PaginationDot = ({ isActive, color, count = 0 }: { isActive: boolean; colo
 };
 
 export default function FamilyFlowBoard() {
+    const { isDarkMode, toggleTheme } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
+
     const { user, login, logout, updateProfile } = useAuthStore();
     const { tasks, loading, addTask, updateTask, deleteTask } = useTasks();
     const { invites } = useInvites();
@@ -164,7 +175,7 @@ export default function FamilyFlowBoard() {
             const invite = invites[0]; // Process one at a time
             Alert.alert(
                 'Davetiniz Var! 💌',
-                `${invite.inviterName} sizi ailesine davet ediyor. Katılmak ister misiniz?`,
+                `${invite.inviterName} sizi ailesine davet ediyor.Katılmak ister misiniz ? `,
                 [
                     { text: 'Reddet', style: 'cancel', onPress: () => rejectInvite(invite.id) },
                     { text: 'Kabul Et', style: 'default', onPress: () => acceptInvite(invite) }
@@ -193,7 +204,16 @@ export default function FamilyFlowBoard() {
                 handleTabChange('pano');
                 return true;
             }
-            return false;
+
+            Alert.alert(
+                'Çıkış',
+                'Uygulamadan çıkmak istiyor musunuz?',
+                [
+                    { text: 'Hayır', style: 'cancel', onPress: () => { } },
+                    { text: 'Evet', style: 'destructive', onPress: () => BackHandler.exitApp() }
+                ]
+            );
+            return true;
         });
         return () => sub.remove();
     }, [activeTab]);
@@ -205,9 +225,11 @@ export default function FamilyFlowBoard() {
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [showProfileEdit, setShowProfileEdit] = useState(false);
     const [showFamilyInvite, setShowFamilyInvite] = useState(false);
+    const [showThemePreview, setShowThemePreview] = useState(false);
+    const [showLeaveFamilyModal, setShowLeaveFamilyModal] = useState(false);
 
     const [editTask, setEditTask] = useState<Task | null>(null);
-    const [editAccent, setEditAccent] = useState('#a78bfa');
+    const [editAccent, setEditAccent] = useState(colors.accent);
 
     const [completeTask, setCompleteTask] = useState<Task | null>(null);
     const [completeAccent, setCompleteAccent] = useState('#4ade80');
@@ -334,14 +356,15 @@ export default function FamilyFlowBoard() {
                         </Text>
                     </View>
                     <View style={styles.headerIcons}>
-                        <TouchableOpacity style={styles.themeButton}>
-                            <Sun size={20} color="#fbbf6a" strokeWidth={2.5} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.iconButton}>
-                            <Bell size={20} color="#8a93b5" />
-                            <View style={styles.badge}>
-                                <Text style={styles.badgeText}>2</Text>
-                            </View>
+                        <TouchableOpacity
+                            style={styles.themeButton}
+                            onPress={toggleTheme}
+                        >
+                            {isDarkMode ? (
+                                <Sun size={20} color="#fbbf6a" strokeWidth={2.5} />
+                            ) : (
+                                <Moon size={20} color={colors.textPrimary} strokeWidth={2.5} />
+                            )}
                         </TouchableOpacity>
                         <TouchableOpacity activeOpacity={0.8} onPress={() => setShowProfileDropdown(true)}>
                             <LinearGradient
@@ -355,7 +378,7 @@ export default function FamilyFlowBoard() {
                                 ) : user?.avatar && user.avatar.length > 2 ? (
                                     <Image source={{ uri: user.avatar }} style={{ width: '100%', height: '100%', borderRadius: 16 }} />
                                 ) : (
-                                    <Text style={{ fontSize: 18, color: '#fff', fontWeight: 'bold' }}>
+                                    <Text style={{ fontSize: 18, color: colors.switchThumb, fontWeight: 'bold' }}>
                                         {user?.name ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : '👤'}
                                     </Text>
                                 )}
@@ -369,7 +392,7 @@ export default function FamilyFlowBoard() {
                         {/* Stat Pills */}
                         <View style={styles.statsRow}>
                             <View style={[styles.statBox, { backgroundColor: 'rgba(167,139,250,0.1)' }]}>
-                                <Text style={[styles.statValue, { color: '#a78bfa' }]}>{tasks.filter(t => t.tag !== 'Tamamlandı').length}</Text>
+                                <Text style={[styles.statValue, { color: colors.accent }]}>{tasks.filter(t => t.tag !== 'Tamamlandı').length}</Text>
                                 <Text style={styles.statLabel}>Aktif</Text>
                             </View>
                             <View style={[styles.statBox, { backgroundColor: 'rgba(74,222,128,0.1)' }]}>
@@ -413,7 +436,7 @@ export default function FamilyFlowBoard() {
                 loading ? (
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <ActivityIndicator size="large" color="#a78bfa" />
-                        <Text style={{ color: '#8a93b5', marginTop: 12 }}>Görevler Yükleniyor...</Text>
+                        <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Görevler Yükleniyor...</Text>
                     </View>
                 ) : (
                     <FlatList
@@ -470,7 +493,18 @@ export default function FamilyFlowBoard() {
                 onClose={() => setShowProfileDropdown(false)}
                 onEditProfile={() => setShowProfileEdit(true)}
                 onInvite={() => setShowFamilyInvite(true)}
+                onLeaveFamily={() => setShowLeaveFamilyModal(true)}
                 onSignOut={logout}
+            />
+
+            <LeaveFamilyModal
+                visible={showLeaveFamilyModal}
+                onClose={() => setShowLeaveFamilyModal(false)}
+                onConfirmLeave={async () => {
+                    if (user) {
+                        await updateProfile({ familyId: user.id });
+                    }
+                }}
             />
 
             <ProfileEditModal
@@ -496,7 +530,7 @@ export default function FamilyFlowBoard() {
                 onSave={(data: any) => {
                     let parts = [];
                     if (data.amount) parts.push(`💸 ${data.amount} ₺`);
-                    if (data.dueDate) parts.push(`⏳ Son Ödeme: ${data.dueDate}`);
+                    if (data.dueDate) parts.push(`⏳ Son Ödeme: ${data.dueDate} `);
 
                     addTask({
                         title: data.title,
@@ -515,9 +549,9 @@ export default function FamilyFlowBoard() {
                 onClose={() => setShowPlansSheet(false)}
                 onSave={(data: any) => {
                     let parts = [];
-                    if (data.date) parts.push(`📅 ${data.date}`);
-                    if (data.time) parts.push(`⏰ ${data.time}`);
-                    if (data.location) parts.push(`📍 ${data.location}`);
+                    if (data.date) parts.push(`📅 ${data.date} `);
+                    if (data.time) parts.push(`⏰ ${data.time} `);
+                    if (data.location) parts.push(`📍 ${data.location} `);
 
                     addTask({
                         title: data.title,
@@ -581,45 +615,53 @@ export default function FamilyFlowBoard() {
 
                         sendMessage({
                             author: user?.name || 'Sistem',
-                            text: `✅ "${completeTask.title}" ${verb}.${note ? `\nNot: ${note}` : ''}`,
+                            text: `✅ "${completeTask.title}" ${verb}.${note ? `\nNot: ${note}` : ''} `,
                             timestamp: Date.now(),
                             avatar: user?.avatar || '🤖',
-                            customPhoto: user?.customPhoto
+                            customPhoto: user?.customPhoto,
+                            isSystem: true
                         });
                     }
                 }}
+            />
+
+            <ThemePreviewModal
+                visible={showThemePreview}
+                onClose={() => setShowThemePreview(false)}
             />
         </KeyboardAvoidingView>
     );
 }
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#12141c' },
-    headerArea: { backgroundColor: '#181b27', paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
-    header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 10 },
-    greeting: { color: '#8a93b5', fontSize: 13, marginBottom: 0, paddingBottom: 0 },
-    familyName: { color: '#e4e8f8', fontSize: 22, fontWeight: 'bold', paddingTop: 0, marginTop: 0 },
-    headerIcons: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-    iconButton: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#202436', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-    themeButton: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#202436', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-    badge: { position: 'absolute', top: -3, right: -3, width: 17, height: 17, borderRadius: 8.5, backgroundColor: '#f43f5e', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#181b27' },
-    badgeText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
-    avatarWrap: { width: 44, height: 44, borderRadius: 16, justifyContent: 'center', alignItems: 'center', shadowColor: '#38bdf8', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 },
-    statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 12, marginBottom: 14 },
-    statBox: { flex: 1, paddingVertical: 10, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)' },
-    statValue: { fontSize: 20, fontWeight: 'bold', marginBottom: 2 },
-    statLabel: { color: '#47506f', fontSize: 11, fontWeight: '600' },
-    subHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20 },
-    subHeaderTitle: { color: '#47506f', fontSize: 11, fontWeight: 'bold', letterSpacing: 0.8 },
-    paginationRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-    paginationDot: { height: 6, borderRadius: 3 },
-    column: { flex: 1, backgroundColor: '#1e2133', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.28, shadowRadius: 24, elevation: 10 },
-    colHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 15, marginTop: 12, marginBottom: 8 },
-    iconBox: { width: 34, height: 34, borderRadius: 11, borderWidth: 1, justifyContent: 'center', alignItems: 'center', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 12 },
-    columnTitle: { fontSize: 16, fontWeight: '700', letterSpacing: -0.1 },
-    taskCount: { color: '#47506f', fontSize: 11 },
-    countPill: { borderRadius: 20, paddingHorizontal: 11, paddingVertical: 3, borderWidth: 1 },
-    countText: { fontSize: 12, fontWeight: '700' },
-    addButton: { marginHorizontal: 15, marginBottom: 10, padding: 8, borderRadius: 12, alignItems: 'center', borderStyle: 'dashed', borderWidth: 1.5 },
-    addText: { fontSize: 13, fontWeight: '600' }
-});
+function createStyles(colors: any) {
+    return StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        headerArea: { backgroundColor: colors.headerBg, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
+        header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 10 },
+        greeting: { color: colors.textSecondary, fontSize: 13, marginBottom: 0, paddingBottom: 0 },
+        familyName: { color: colors.textPrimary, fontSize: 22, fontWeight: 'bold', paddingTop: 0, marginTop: 0 },
+        headerIcons: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+        iconButton: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+        themeButton: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+        badge: { position: 'absolute', top: -3, right: -3, width: 17, height: 17, borderRadius: 8.5, backgroundColor: colors.warning, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: colors.headerBg },
+        badgeText: { color: colors.switchThumb, fontSize: 9, fontWeight: 'bold' },
+        avatarWrap: { width: 44, height: 44, borderRadius: 16, justifyContent: 'center', alignItems: 'center', shadowColor: '#38bdf8', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 },
+        statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 12, marginBottom: 14 },
+        statBox: { flex: 1, paddingVertical: 10, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+        statValue: { fontSize: 20, fontWeight: 'bold', marginBottom: 2 },
+        statLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: '600' },
+        subHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20 },
+        subHeaderTitle: { color: colors.textSecondary, fontSize: 11, fontWeight: 'bold', letterSpacing: 0.8 },
+        paginationRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+        paginationDot: { height: 6, borderRadius: 3 },
+        column: { flex: 1, backgroundColor: colors.card, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.28, shadowRadius: 24, elevation: 10 },
+        colHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 15, marginTop: 12, marginBottom: 8 },
+        iconBox: { width: 34, height: 34, borderRadius: 11, borderWidth: 1, justifyContent: 'center', alignItems: 'center', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 12 },
+        columnTitle: { fontSize: 16, fontWeight: '700', letterSpacing: -0.1 },
+        taskCount: { color: colors.textSecondary, fontSize: 11 },
+        countPill: { borderRadius: 20, paddingHorizontal: 11, paddingVertical: 3, borderWidth: 1 },
+        countText: { fontSize: 12, fontWeight: '700' },
+        addButton: { marginHorizontal: 15, marginBottom: 10, padding: 8, borderRadius: 12, alignItems: 'center', borderStyle: 'dashed', borderWidth: 1.5 },
+        addText: { fontSize: 13, fontWeight: '600' }
+    });
+}

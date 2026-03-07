@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from 'react-native';
 import { Star, X, Check } from 'lucide-react-native';
 import BottomSheetWrapper from './BottomSheetWrapper';
+import { useThemeStore } from '../store/themeStore';
+import { getColors } from '../theme/colors';
 
 const A = '#f472b6';
 const TASK_CHIPS = [
@@ -27,6 +29,10 @@ interface BottomSheetProps {
 }
 
 export default function OthersBottomSheet({ visible, onClose, onSave }: BottomSheetProps) {
+    const { isDarkMode } = useThemeStore();
+    const colors = getColors(isDarkMode);
+    const styles = createStyles(colors);
+
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState<string | null>(null);
@@ -118,7 +124,7 @@ export default function OthersBottomSheet({ visible, onClose, onSave }: BottomSh
                     activeOpacity={title.trim() ? 0.8 : 1}
                     onPress={handleSave}
                 >
-                    <Check size={19} color={title.trim() ? '#fff' : '#47506f'} />
+                    <Check size={19} color={title.trim() ? '#fff' : colors.textSecondary} />
                     <Text style={[styles.saveText, title.trim() && { color: '#fff' }]}>Görev Ekle</Text>
                 </TouchableOpacity>
             </ScrollView>
@@ -126,28 +132,28 @@ export default function OthersBottomSheet({ visible, onClose, onSave }: BottomSh
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) { return StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', padding: 18, paddingTop: 6 },
     iconBox: { width: 44, height: 44, borderRadius: 15, backgroundColor: 'rgba(244,114,182,0.13)', borderColor: 'rgba(244,114,182,0.26)', borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
     headerText: { flex: 1, marginLeft: 12 },
-    subtitle: { color: '#47506f', fontSize: 11, fontWeight: 'bold' },
-    title: { color: '#e4e8f8', fontSize: 17, fontWeight: 'bold' },
-    closeBtn: { width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' },
-    divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.07)', marginHorizontal: 18, marginBottom: 18 },
+    subtitle: { color: colors.textSecondary, fontSize: 11, fontWeight: 'bold' },
+    title: { color: colors.textPrimary, fontSize: 17, fontWeight: 'bold' },
+    closeBtn: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+    divider: { height: 1, backgroundColor: colors.border, marginHorizontal: 18, marginBottom: 18 },
     body: { paddingHorizontal: 18, paddingBottom: 90 },
     chipsRow: { gap: 7, paddingBottom: 16 },
-    chip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, paddingHorizontal: 13, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.09)', gap: 5 },
+    chip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 7, paddingHorizontal: 13, borderRadius: 22, backgroundColor: colors.border, borderWidth: 1.5, borderColor: colors.border, gap: 5 },
     chipActive: { backgroundColor: 'rgba(244,114,182,0.13)', borderColor: 'rgba(244,114,182,0.7)' },
     chipIcon: { fontSize: 13 },
-    chipText: { color: '#8a93b5', fontSize: 13, fontWeight: '400' },
+    chipText: { color: colors.textSecondary, fontSize: 13, fontWeight: '400' },
     chipTextActive: { color: A, fontWeight: '600' },
-    label: { color: '#47506f', fontSize: 11, fontWeight: 'bold', marginBottom: 8 },
-    input: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 15, paddingHorizontal: 16, height: 50, color: '#e4e8f8', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.09)', marginBottom: 14 },
+    label: { color: colors.textSecondary, fontSize: 11, fontWeight: 'bold', marginBottom: 8 },
+    input: { backgroundColor: colors.border, borderRadius: 15, paddingHorizontal: 16, height: 50, color: colors.textPrimary, borderWidth: 1.5, borderColor: colors.border, marginBottom: 14 },
     prioRow: { marginBottom: 16 },
     prioGrid: { flexDirection: 'row', gap: 8 },
-    prioBtn: { flex: 1, paddingVertical: 10, borderRadius: 13, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.09)', alignItems: 'center' },
-    prioBtnText: { color: '#8a93b5', fontSize: 12 },
-    saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: 17, borderRadius: 18, gap: 9 },
+    prioBtn: { flex: 1, paddingVertical: 10, borderRadius: 13, backgroundColor: colors.border, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center' },
+    prioBtnText: { color: colors.textSecondary, fontSize: 12 },
+    saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.border, padding: 17, borderRadius: 18, gap: 9 },
     saveActive: { backgroundColor: A },
-    saveText: { color: '#47506f', fontWeight: 'bold', fontSize: 16 },
-});
+    saveText: { color: colors.textSecondary, fontWeight: 'bold', fontSize: 16 },
+}); }
