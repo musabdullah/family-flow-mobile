@@ -15,10 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.isim.familyflow"
+      "bundleIdentifier": "com.rookieto.familyflow"
     },
     "android": {
-      "package": "com.isim.familyflow",
+      "package": "com.rookieto.familyflow",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

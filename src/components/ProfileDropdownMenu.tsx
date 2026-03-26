@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback, Image } from 'react-native';
-import { User, UserPlus, LogOut, ChevronRight } from 'lucide-react-native';
+import { User, UserPlus, LogOut, ChevronRight, Users } from 'lucide-react-native';
 import { UserProfile } from '../store/authStore';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutRight } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,11 +14,12 @@ interface ProfileDropdownMenuProps {
     onClose: () => void;
     onEditProfile: () => void;
     onInvite: () => void;
+    onViewFamily: () => void;
     onLeaveFamily: () => void;
     onSignOut: () => void;
 }
 
-export default function ProfileDropdownMenu({ visible, user, onClose, onEditProfile, onInvite, onLeaveFamily, onSignOut }: ProfileDropdownMenuProps) {
+export default function ProfileDropdownMenu({ visible, user, onClose, onEditProfile, onInvite, onViewFamily, onLeaveFamily, onSignOut }: ProfileDropdownMenuProps) {
     const { isDarkMode } = useThemeStore();
     const colors = getColors(isDarkMode);
     const styles = createStyles(colors);
@@ -95,6 +96,21 @@ export default function ProfileDropdownMenu({ visible, user, onClose, onEditProf
                             </TouchableOpacity>
 
                             <View style={styles.divider} />
+
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                activeOpacity={0.7}
+                                onPress={() => { onClose(); onViewFamily(); }}
+                            >
+                                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
+                                    <Users size={20} color="#3b82f6" />
+                                </View>
+                                <View style={styles.menuTextWrap}>
+                                    <Text style={styles.menuTitle}>Aileyi Görüntüle</Text>
+                                    <Text style={styles.menuSub}>Aile üyelerini gör</Text>
+                                </View>
+                                <ChevronRight size={16} color={colors.textSecondary} />
+                            </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={styles.menuItem}

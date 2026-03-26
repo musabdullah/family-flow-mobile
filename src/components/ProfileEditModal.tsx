@@ -7,6 +7,7 @@ import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutRight } from 'react-na
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../store/themeStore';
 import { getColors } from '../theme/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ProfileEditModalProps {
     visible: boolean;
@@ -19,14 +20,14 @@ interface ProfileEditModalProps {
 export default function ProfileEditModal({ visible, user, onClose, onSavePhoto, onSaveName }: ProfileEditModalProps) {
     const { isDarkMode } = useThemeStore();
     const colors = getColors(isDarkMode);
-    const styles = createStyles(colors);
+    const insets = useSafeAreaInsets();
+    const styles = createStyles(colors, insets);
 
     const [name, setName] = useState(user?.name || '');
+    const [pendingPhoto, setPendingPhoto] = useState<string | null | undefined>(undefined);
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleBack = () => {
-        if (name.trim() !== '' && name.trim() !== user?.name && onSaveName) {
-            onSaveName(name.trim());
-        }
         onClose();
     };
 
@@ -37,12 +38,25 @@ export default function ProfileEditModal({ visible, user, onClose, onSavePhoto, 
             return true;
         });
         return () => sub.remove();
-    }, [visible, name, user?.name, onSaveName, onClose]);
+    }, [visible, onClose]);
+
+    // Reset local state when modal closes
+    React.useEffect(() => {
+        if (!visible) {
+            setPendingPhoto(undefined);
+            setName(user?.name || '');
+        }
+    }, [visible, user?.name]);
 
     if (!visible) return null;
 
     const initials = (name || user?.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-    const displayAvatar = user?.customPhoto;
+    
+    // Determine the source of the avatar to display
+    let displayAvatar = user?.customPhoto;
+    if (pendingPhoto !== undefined) {
+        displayAvatar = pendingPhoto === null ? undefined : pendingPhoto;
+    }
 
     const handlePickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -55,12 +69,33 @@ export default function ProfileEditModal({ visible, user, onClose, onSavePhoto, 
 
         if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0].base64) {
             const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
-            onSavePhoto(base64Img);
+            setPendingPhoto(base64Img); // Store in local state instead of saving immediately
         }
     };
 
     const handleRemovePhoto = () => {
-        onSavePhoto(undefined);
+        setPendingPhoto(null); // Null explicitely means user wants to remove photo
+    };
+
+    const handleSaveChanges = async () => {
+        setIsSaving(true);
+        try {
+            // Save photo if it was changed
+            if (pendingPhoto !== undefined) {
+                // If pendingPhoto is null, it removes it, else it passes the base64 string
+                await onSavePhoto(pendingPhoto === null ? undefined : pendingPhoto); 
+            }
+            
+            // Save name if it was changed
+            if (name.trim() !== '' && name.trim() !== user?.name && onSaveName) {
+                await onSaveName(name.trim());
+            }
+            onClose();
+        } catch (error) {
+            console.error("Error saving profile details:", error);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -163,12 +198,24 @@ export default function ProfileEditModal({ visible, user, onClose, onSavePhoto, 
                     </View>
 
                 </ScrollView>
+                <View style={styles.footer}>
+                    <TouchableOpacity
+                        style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
+                        onPress={handleSaveChanges}
+                        disabled={isSaving}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.saveBtnText}>
+                            {isSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </KeyboardAvoidingView>
         </Animated.View>
     );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: any, insets: any) {
     return StyleSheet.create({
         container: {
             ...StyleSheet.absoluteFillObject,
@@ -179,7 +226,7 @@ function createStyles(colors: any) {
             flexDirection: 'row',
             alignItems: 'center',
             paddingHorizontal: 20,
-            paddingTop: Platform.OS === 'ios' ? 50 : 30, // SafeArea approximation
+            paddingTop: Platform.OS === 'ios' ? 50 : Math.max(insets.top + 10, 30), // SafeArea approximation
             paddingBottom: 20,
             borderBottomWidth: 1,
             borderBottomColor: colors.border,
@@ -362,6 +409,28 @@ function createStyles(colors: any) {
         initialsCardText: {
             color: colors.textSecondary,
             fontSize: 13,
+        },
+        footer: {
+            padding: 24,
+            paddingBottom: Math.max(insets.bottom + 16, 24),
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            backgroundColor: colors.card,
+        },
+        saveBtn: {
+            backgroundColor: colors.accent,
+            borderRadius: 16,
+            paddingVertical: 18,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        saveBtnDisabled: {
+            opacity: 0.7,
+        },
+        saveBtnText: {
+            color: '#FFFFFF',
+            fontSize: 16,
+            fontWeight: 'bold',
         }
     });
 }

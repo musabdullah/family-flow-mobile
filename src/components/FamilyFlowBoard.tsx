@@ -21,6 +21,7 @@ import ProfileDropdownMenu from './ProfileDropdownMenu';
 import ProfileEditModal from './ProfileEditModal';
 import FamilyInviteModal from './FamilyInviteModal';
 import LeaveFamilyModal from './LeaveFamilyModal';
+import FamilyMembersModal from './FamilyMembersModal';
 import ThemePreviewModal from './ThemePreviewModal';
 import ChatScreen from './ChatScreen';
 import ArchiveScreen from './ArchiveScreen';
@@ -225,6 +226,7 @@ export default function FamilyFlowBoard() {
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [showProfileEdit, setShowProfileEdit] = useState(false);
     const [showFamilyInvite, setShowFamilyInvite] = useState(false);
+    const [showFamilyMembers, setShowFamilyMembers] = useState(false);
     const [showThemePreview, setShowThemePreview] = useState(false);
     const [showLeaveFamilyModal, setShowLeaveFamilyModal] = useState(false);
 
@@ -493,6 +495,7 @@ export default function FamilyFlowBoard() {
                 onClose={() => setShowProfileDropdown(false)}
                 onEditProfile={() => setShowProfileEdit(true)}
                 onInvite={() => setShowFamilyInvite(true)}
+                onViewFamily={() => setShowFamilyMembers(true)}
                 onLeaveFamily={() => setShowLeaveFamilyModal(true)}
                 onSignOut={logout}
             />
@@ -522,6 +525,13 @@ export default function FamilyFlowBoard() {
             <FamilyInviteModal
                 visible={showFamilyInvite}
                 onClose={() => setShowFamilyInvite(false)}
+            />
+
+            <FamilyMembersModal
+                visible={showFamilyMembers}
+                onClose={() => setShowFamilyMembers(false)}
+                familyId={user?.familyId}
+                currentUserEmail={user?.email}
             />
 
             <BillsBottomSheet
